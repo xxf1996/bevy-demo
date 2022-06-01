@@ -7,6 +7,20 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.7.0", features = ["dynamic"] }
+bevy_obj = "0.7.0"
+bevy_egui = "0.14"
 
 [workspace]
 resolver = "2"
+
+[[example]]
+name = "test"
+path = "example/test.rs"
+
+[[example]]
+name = "obj_standard"
+path = "example/obj_standard.rs"
+
+[[example]]
+name = "obj_custom"
+path = "example/obj_custom.rs"

@@ -1,5 +1,13 @@
 use bevy::prelude::*;
 use bevy_obj::*;
+use smooth_bevy_cameras::{
+  controllers::orbit::{
+    OrbitCameraBundle,
+    OrbitCameraController,
+    OrbitCameraPlugin
+  },
+  LookTransformPlugin
+};
 
 pub struct SetupPlugin;
 
@@ -18,14 +26,20 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut materials: 
     transform: Transform::from_xyz(0., 0., 0.),
     material: materials.add(StandardMaterial {
       base_color: Color::Rgba { red: 0.8, green: 0.2, blue: 0.2, alpha: 1.0 },
+      // double_sided: true,
       ..default()
     }),
     ..default()
   });
-  commands.spawn_bundle(PerspectiveCameraBundle {
-    transform: Transform::from_xyz(1., 1., 1.).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
-    ..default()
-  });
+  commands.spawn_bundle(OrbitCameraBundle::new(
+    OrbitCameraController::default(),
+    PerspectiveCameraBundle {
+      transform: Transform::from_xyz(10., 10., 10.).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+      ..default()
+    },
+    Vec3::new(1., 1., 1.),
+    Vec3::new(0., 0., 0.)
+  ));
   commands.spawn_bundle(DirectionalLightBundle {
     directional_light: DirectionalLight {
       color: Color::WHITE,
@@ -52,6 +66,8 @@ fn rotate_obj(
 fn main() {
   App::new()
     .add_plugins(DefaultPlugins)
+    .add_plugin(LookTransformPlugin)
+    .add_plugin(OrbitCameraPlugin::default())
     .add_plugin(ObjPlugin)
     .add_plugin(SetupPlugin)
     .add_startup_system(setup)

@@ -6,9 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.7.0", features = ["dynamic"] }
+bevy = { version = "0.7.0", features = ["dynamic", "jpeg"] }
 bevy_obj = "0.7.0"
 bevy_egui = "0.14"
+smooth-bevy-cameras = "0.4.0"
 
 [workspace]
 resolver = "2"
@@ -24,3 +25,7 @@ path = "example/obj_standard.rs"
 [[example]]
 name = "obj_custom"
 path = "example/obj_custom.rs"
+
+[[example]]
+name = "gltf_load"
+path = "example/gltf_load.rs"

@@ -12,7 +12,7 @@ pub struct SetupPlugin;
 #[derive(Clone, Debug, TypeUuid)]
 #[uuid = "031c3ce6-8962-404b-86aa-c5c9f8be99b4"]
 pub struct ObjMaterial {
-  color: Color,
+  pub color: Color,
 }
 
 pub struct ObjMaterialData {

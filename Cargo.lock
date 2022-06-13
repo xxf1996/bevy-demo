@@ -240,6 +240,7 @@ dependencies = [
  "bevy",
  "bevy_egui",
  "bevy_obj",
+ "rand",
  "smooth-bevy-cameras",
 ]
 

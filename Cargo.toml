@@ -10,6 +10,7 @@ bevy = { version = "0.7.0", features = ["jpeg"] }
 bevy_obj = "0.7.0"
 bevy_egui = "0.14"
 smooth-bevy-cameras = "0.4.0"
+rand = "0.8.5"
 
 [workspace]
 resolver = "2"
@@ -29,6 +30,10 @@ path = "example/obj_custom.rs"
 [[example]]
 name = "gltf_load"
 path = "example/gltf_load.rs"
+
+[[example]]
+name = "games202_idea"
+path = "example/games202_idea.rs"
 
 [profile.release]
 opt-level = 's'

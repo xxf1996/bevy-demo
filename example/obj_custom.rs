@@ -1,7 +1,7 @@
 use bevy::{
   prelude::*,
   render::{
-    render_asset::RenderAsset, renderer::RenderDevice, render_resource::{Buffer, BindGroup, BufferInitDescriptor, std140::{AsStd140, Std140}, BufferUsages, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, BufferBindingType, BufferSize},
+    render_asset::RenderAsset, renderer::RenderDevice, render_resource::{Buffer, BindGroup, BufferInitDescriptor, std140::{AsStd140, Std140}, BufferUsages, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, BufferBindingType, BufferSize },
   }, ecs::system::lifetimeless::SRes, pbr::MaterialPipeline, reflect::TypeUuid
 };
 use bevy_obj::*;
@@ -81,6 +81,15 @@ impl Material for ObjMaterial {
       ],
       label: Some("obj_bind_group_layout")
     })
+  }
+
+  fn specialize(
+    _pipeline: &MaterialPipeline<Self>,
+    descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
+    _layout: &bevy::render::mesh::MeshVertexBufferLayout,
+  ) -> Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
+    descriptor.primitive.cull_mode = None; // 开启双面渲染
+    Ok(())
   }
 }
 

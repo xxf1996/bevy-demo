@@ -1,7 +1,7 @@
 mod obj_custom;
 
 use rand::Rng;
-use bevy::{prelude::*, diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}, gltf::{Gltf, GltfMesh, GltfNode}, reflect::TypeUuid, render::{render_asset::{RenderAsset, PrepareAssetError}, renderer::RenderDevice, render_resource::{Buffer, BindGroup, BufferInitDescriptor, BufferUsages, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, BufferBindingType, BufferSize, Face, SpecializedMeshPipelineError, RawRenderPipelineDescriptor, RenderPipelineDescriptor, BindGroupEntry}, mesh::MeshVertexBufferLayout}, ecs::system::{lifetimeless::SRes, SystemParamItem}, pbr::MaterialPipeline};
+use bevy::{prelude::*, diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}, gltf::{Gltf, GltfMesh, GltfNode}, reflect::TypeUuid, render::{render_asset::{RenderAsset, PrepareAssetError}, renderer::RenderDevice, render_resource::{Buffer, BindGroup, BufferInitDescriptor, BufferUsages, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, SpecializedMeshPipelineError, RenderPipelineDescriptor, std140::{AsStd140, Std140}, BindGroupEntry, BindGroupLayoutEntry, ShaderStages, BindingType, BufferBindingType, BufferSize, BindingResource, TextureViewDescriptor, TextureViewDimension, TextureSampleType, SamplerBindingType}, mesh::MeshVertexBufferLayout}, ecs::system::{lifetimeless::SRes, SystemParamItem}, pbr::MaterialPipeline};
 use smooth_bevy_cameras::{
   controllers::orbit::{
     OrbitCameraBundle,
@@ -21,7 +21,10 @@ struct GltfLoaded(bool); // 自定义状态，参考：https://bevy-cheatbook.gi
 
 #[derive(Debug, Clone, TypeUuid)]
 #[uuid = "dc46d8c2-8605-4db6-baad-dfb292dec638"]
-pub struct Games202Material {}
+pub struct Games202Material {
+  base_color: Color,
+  base_color_texture: Image
+}
 
 #[derive(Clone)]
 pub struct Games202MaterialGpu {
@@ -39,18 +42,35 @@ impl RenderAsset for Games202Material {
   }
 
   fn prepare_asset(
-    _extracted_asset: Self::ExtractedAsset,
+    extracted_asset: Self::ExtractedAsset,
     param: &mut SystemParamItem<Self::Param>,
   ) -> Result<Self::PreparedAsset, PrepareAssetError<Self::ExtractedAsset>> {
     let (render_device, material_pipeline) = param as &mut (Res<'_, RenderDevice>, Res<'_, MaterialPipeline<Self>>);
+    let base_color = Vec4::from_slice(&extracted_asset.base_color.as_linear_rgba_f32());
+    let base_color_texture = &extracted_asset.base_color_texture;
+    let texture_base = render_device.create_texture(&base_color_texture.texture_descriptor);
     let buffer = render_device.create_buffer_with_data(&BufferInitDescriptor {
-      contents: &[],
-      label: None,
+      contents: base_color.as_std140().as_bytes(),
+      label: Some("Games202Material_unifrom_buffer"),
       usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
     });
+    // TODO: texture的数据怎么传入？
     let bind_group = render_device.create_bind_group(&BindGroupDescriptor {
-      entries: &[],
-      label: None,
+      entries: &[
+        BindGroupEntry {
+          binding: 0,
+          resource: buffer.as_entire_binding(),
+        },
+        BindGroupEntry {
+          binding: 1,
+          resource: BindingResource::TextureView(&texture_base.create_view(&TextureViewDescriptor::default())),
+        },
+        BindGroupEntry {
+          binding: 2,
+          resource: BindingResource::Sampler(&render_device.create_sampler(&base_color_texture.sampler_descriptor))
+        }
+      ],
+      label: Some("Games202Material_unifrom_bind_group"),
       layout: &material_pipeline.material_layout
     });
 
@@ -76,8 +96,35 @@ impl Material for Games202Material {
 
   fn bind_group_layout(render_device: &RenderDevice) -> BindGroupLayout {
     render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-      entries: &[],
-      label: None
+      entries: &[
+        BindGroupLayoutEntry {
+          binding: 0,
+          visibility: ShaderStages::FRAGMENT,
+          ty: BindingType::Buffer {
+            ty: BufferBindingType::Uniform,
+            has_dynamic_offset: false,
+            min_binding_size: BufferSize::new(Vec4::std140_size_static() as u64)
+          },
+          count: None
+        },
+        BindGroupLayoutEntry {
+          binding: 1,
+          visibility: ShaderStages::FRAGMENT,
+          ty: BindingType::Texture {
+            multisampled: false,
+            view_dimension: TextureViewDimension::D2,
+            sample_type: TextureSampleType::Float { filterable: true }
+          },
+          count: None
+        },
+        BindGroupLayoutEntry {
+          binding: 2,
+          visibility: ShaderStages::FRAGMENT,
+          ty: BindingType::Sampler(SamplerBindingType::Filtering),
+          count: None
+        }
+      ],
+      label: Some("Games202Material_unifrom_bind_layout"),
     })
   }
 
@@ -103,7 +150,8 @@ fn load_gltf_node(
   builder: &mut WorldChildBuilder,
   gltf_mesh: &Res<Assets<GltfMesh>>,
   materials: &mut ResMut<Assets<Games202Material>>,
-  origin_materials: &Res<Assets<StandardMaterial>>
+  origin_materials: &Res<Assets<StandardMaterial>>,
+  images: &Res<Assets<Image>>
 ) {
   let transform = node.transform;
   let mut parent_bundle = builder.spawn_bundle(TransformBundle::from_transform(transform.clone()));
@@ -115,15 +163,19 @@ fn load_gltf_node(
       for obj in mesh.primitives.iter() {
         // 可以利用原材质参数传递需要用到的信息
         let origin_material = origin_materials.get(obj.material.as_ref().unwrap()).unwrap();
+        let base_color_texture = images.get(origin_material.base_color_texture.as_ref().unwrap()).unwrap();
         parent.spawn_bundle(MaterialMeshBundle {
           mesh: obj.mesh.clone(),
-          material: materials.add(Games202Material {}),
+          material: materials.add(Games202Material {
+            base_color: origin_material.base_color,
+            base_color_texture: base_color_texture.clone()
+          }),
           // transform: node.transform.clone(),
           ..default()
         });
       }
       for child in &node.children {
-        load_gltf_node(child, parent, gltf_mesh, materials, origin_materials);
+        load_gltf_node(child, parent, gltf_mesh, materials, origin_materials, images);
       }
     });
   }
@@ -143,7 +195,8 @@ fn custom_gltf(
   mut gltf_loaded: ResMut<State<GltfLoaded>>,
   mut scenes: ResMut<Assets<Scene>>,
   mut materials: ResMut<Assets<Games202Material>>,
-  origin_materials: Res<Assets<StandardMaterial>>
+  origin_materials: Res<Assets<StandardMaterial>>,
+  images: Res<Assets<Image>>
 ) {
   if let GltfLoaded(true) = gltf_loaded.current() {
     return;
@@ -157,7 +210,7 @@ fn custom_gltf(
       .with_children(|parent| {
         for node_id in gltf.nodes.iter() {
           let node = gltf_nodes.get(node_id).unwrap();
-          load_gltf_node(node, parent, &gltf_mesh, &mut materials, &origin_materials);
+          load_gltf_node(node, parent, &gltf_mesh, &mut materials, &origin_materials, &images);
         }
       });
     let scene_id = scenes.add(Scene::new(world));

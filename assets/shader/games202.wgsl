@@ -1,11 +1,21 @@
-#import bevy_pbr::mesh_view_bind_group // 这里是直接从bevy_pbr包里引入相关的着色器模块
+// 这里是直接从bevy_pbr包里引入相关的着色器模块
+#import bevy_pbr::mesh_view_bind_group
 #import bevy_pbr::mesh_struct
 
+// attribute
 struct Vertex {
   [[location(0)]] position: vec3<f32>;
   [[location(1)]] normal: vec3<f32>;
   [[location(2)]] uv: vec2<f32>;
 };
+
+// uniform
+struct Material {
+  base_color: vec4<f32>;
+};
+
+[[group(1), binding(0)]]
+var<uniform> material: Material;
 
 [[group(2), binding(0)]]
 var<uniform> mesh: Mesh; // Mesh结构来自上述引入代码中：https://github.com/bevyengine/bevy/blob/83c6ffb73c4a91182cda10141f824987ef3fba2f/crates/bevy_pbr/src/render/mesh_struct.wgsl#L3
@@ -34,5 +44,5 @@ struct FragmentInput {
 
 [[stage(fragment)]]
 fn fragment(input: FragmentInput) -> [[location(0)]] vec4<f32> {
-  return vec4<f32>(input.normal, 1.0);
+  return material.base_color;
 }

@@ -104,9 +104,9 @@ fn replace_material(
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-  // commands.spawn_scene(asset_server.load("model/realistic interior/realistic interior.glb#Scene0")); // 需要指定模型名称（#后面的名称），不然加载为空
-  let gltf = asset_server.load("model/realistic interior/realistic interior.glb");
-  commands.insert_resource(GltfAssetPack(gltf)); // 仅把gltf作为资源插入
+  commands.spawn_scene(asset_server.load("model/realistic interior/realistic interior.glb#Scene0")); // 需要指定模型名称（#后面的名称），不然加载为空
+  // let gltf = asset_server.load("model/realistic interior/realistic interior.glb");
+  // commands.insert_resource(GltfAssetPack(gltf)); // 仅把gltf作为资源插入
   commands.spawn_bundle(OrbitCameraBundle::new(
     OrbitCameraController::default(),
     PerspectiveCameraBundle {
@@ -137,7 +137,7 @@ fn main() {
     .add_plugin(OrbitCameraPlugin::default())
     .add_state(GltfLoaded(false))
     .add_startup_system(setup)
-    .add_system(custom_gltf)
+    // .add_system(custom_gltf)
     // .add_system(replace_material)
     .run();
 }

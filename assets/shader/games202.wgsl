@@ -12,10 +12,16 @@ struct Vertex {
 // uniform
 struct Material {
   base_color: vec4<f32>;
+  metallic: f32;
+  roughness: f32;
 };
 
 [[group(1), binding(0)]]
 var<uniform> material: Material;
+[[group(1), binding(1)]]
+var texture_t: texture_2d<f32>;
+[[group(1), binding(2)]]
+var texture_s: sampler;
 
 [[group(2), binding(0)]]
 var<uniform> mesh: Mesh; // Mesh结构来自上述引入代码中：https://github.com/bevyengine/bevy/blob/83c6ffb73c4a91182cda10141f824987ef3fba2f/crates/bevy_pbr/src/render/mesh_struct.wgsl#L3
@@ -44,5 +50,6 @@ struct FragmentInput {
 
 [[stage(fragment)]]
 fn fragment(input: FragmentInput) -> [[location(0)]] vec4<f32> {
-  return material.base_color;
+  let albedo = material.base_color * textureSample(texture_t, texture_s, input.uv);
+  return vec4<f32>(material.metallic, material.roughness, 0.0, 1.0);
 }

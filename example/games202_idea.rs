@@ -59,8 +59,10 @@ impl RenderAsset for Games202Material {
       contents: &[
         base_color.as_std140().as_bytes(),
         extracted_asset.metallic.as_std140().as_bytes(),
-        extracted_asset.roughness.as_std140().as_bytes()
-      ].concat(), // 不知道可不可以这样连接buffer数据？
+        extracted_asset.roughness.as_std140().as_bytes(),
+        (0.0f32).as_std140().as_bytes(), // TODO: 原来buffer contents传送的字节数必须是2的次方？
+        (0.0f32).as_std140().as_bytes(),
+      ].concat(), // 连接buffer数据
       label: Some("Games202Material_unifrom_buffer"),
       usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
     });
@@ -114,7 +116,7 @@ impl Material for Games202Material {
           ty: BindingType::Buffer {
             ty: BufferBindingType::Uniform,
             has_dynamic_offset: false,
-            min_binding_size: BufferSize::new(f32::std140_size_static() as u64) // FIXME: buffer尺寸适应
+            min_binding_size: None // FIXME: buffer尺寸适应
           },
           count: None
         },

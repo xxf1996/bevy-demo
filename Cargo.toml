@@ -9,6 +9,7 @@ edition = "2021"
 bevy = { version = "0.7.0", features = ["jpeg"] }
 bevy_obj = "0.7.0"
 bevy_egui = "0.14"
+bevy-inspector-egui = "0.11.0"
 smooth-bevy-cameras = "0.4.0"
 rand = "0.8.5"
 

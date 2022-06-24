@@ -2,6 +2,7 @@ mod obj_custom;
 
 use rand::Rng;
 use bevy::{prelude::*, diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}, gltf::{Gltf, GltfMesh, GltfNode}, reflect::TypeUuid, render::{render_asset::{RenderAsset, PrepareAssetError, RenderAssets}, renderer::RenderDevice, render_resource::{Buffer, BindGroup, BufferInitDescriptor, BufferUsages, BindGroupDescriptor, BindGroupLayout, BindGroupLayoutDescriptor, SpecializedMeshPipelineError, RenderPipelineDescriptor, std140::{AsStd140, Std140}, BindGroupEntry, BindGroupLayoutEntry, ShaderStages, BindingType, BufferBindingType, BufferSize, BindingResource, TextureViewDimension, TextureSampleType, SamplerBindingType}, mesh::MeshVertexBufferLayout}, ecs::system::{lifetimeless::SRes, SystemParamItem}, pbr::MaterialPipeline};
+use bevy_inspector_egui::WorldInspectorPlugin;
 use smooth_bevy_cameras::{
   controllers::orbit::{
     OrbitCameraBundle,
@@ -267,6 +268,7 @@ fn main() {
     .add_plugin(OrbitCameraPlugin::default())
     .add_plugin(MaterialPlugin::<ObjMaterial>::default()) // 添加材质
     .add_plugin(MaterialPlugin::<Games202Material>::default())
+    .add_plugin(WorldInspectorPlugin::new()) // 基本信息debug
     .add_state(GltfLoaded(false))
     .add_startup_system(setup)
     .add_system(custom_gltf)
